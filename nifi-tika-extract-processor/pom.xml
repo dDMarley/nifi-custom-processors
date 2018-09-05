@@ -20,10 +20,8 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.ddmarley</groupId>
 	<artifactId>nifi-tika-extract-processor</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<packaging>jar</packaging>
 
 	<properties>
 		<nifi.version>1.7.1</nifi.version>
@@ -32,8 +30,29 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.nifi</groupId>
+			<artifactId>nifi-utils</artifactId>
+			<version>${nifi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>1.17</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-parsers</artifactId>
+			<version>1.17</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.nifi</groupId>
 			<artifactId>nifi-mock</artifactId>
 			<version>${nifi.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

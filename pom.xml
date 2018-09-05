@@ -29,14 +29,9 @@
 		<nifi.version>1.7.1</nifi.version>
 	</properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.apache.nifi</groupId>
-			<artifactId>nifi-mock</artifactId>
-			<version>${nifi.version}</version>
-		</dependency>
-	</dependencies>
-
-
+	<modules>
+		<module>nifi-tika-extract-nar</module>
+		<module>nifi-tika-extract-processor</module>
+	</modules>
 
 </project>
