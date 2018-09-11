@@ -14,14 +14,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.apache.nifi</groupId>
-		<artifactId>nifi-nar-bundles</artifactId>
-		<version>1.7.1</version>
-	</parent>
-
 	<groupId>com.ddmarley</groupId>
-	<artifactId>nifi-tika-extract</artifactId>
+	<artifactId>nifi-custom-processors</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
@@ -30,7 +24,7 @@
 	</properties>
 
 	<modules>
-		<module>nifi-tika-extract-nar</module>
+		<module>nifi-common-nar</module>
 		<module>nifi-tika-extract-processor</module>
 	</modules>
 
