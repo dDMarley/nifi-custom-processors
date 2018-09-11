@@ -26,6 +26,7 @@
 	<modules>
 		<module>nifi-common-nar</module>
 		<module>nifi-tika-extract-processor</module>
+		<module>nifi-fetch-files-processor</module>
 	</modules>
 
 </project>
