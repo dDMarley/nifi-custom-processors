@@ -39,6 +39,7 @@ import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.xml.sax.SAXException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -130,20 +131,25 @@ public class ExtractTikaContent extends AbstractProcessor {
 		final String contentLocation = context.getProperty(CONTENT_LOCATION).getValue();
 
 		final AtomicReference<TikaResults> results = new AtomicReference<TikaResults>(null);
-		final AtomicReference<InputStream> stream = new AtomicReference<InputStream>(null);
+		final AtomicReference<String> error = new AtomicReference<String>("none");
 		if (contentLocation.equals(FLOW_FILE_CONTENT)) {
 			session.read(flowFile, in -> {
-				stream.set(new BufferedInputStream(in));
-			});
-			try {
-				if(stream.get().available() == 0) {
-					getLogger().warn("Could not get binary content from flowFile content. Routing to " + REL_ORIGINAL);
-					session.transfer(flowFile, REL_ORIGINAL);
-					return;
+				try {
+					if(in.available() == 0) {
+						getLogger().warn("Could not get binary content from flowFile content. Routing to " + REL_ORIGINAL);
+						error.set("rel_original");
+					} else {
+						results.set(this.ExtractWithTika(new BufferedInputStream(in), extractStrategy));
+					}
+				} catch (TikaException e) {
+					getLogger().error("Tika extraction failed for content binary: " + e.getMessage());
+					error.set("rel_failure");
 				}
-				results.set(this.ExtractWithTika(stream.get(), extractStrategy));
-			} catch (TikaException | IOException e) {
-				getLogger().error("Tika extraction failed for content binary: " + e.getMessage());
+			});
+			if(error.get().equals("rel_original")) {
+				session.transfer(flowFile, REL_ORIGINAL);
+				return;
+			} else if(error.get().equals("rel_failure")) {
 				session.transfer(flowFile, REL_FAILURE);
 				return;
 			}
@@ -183,12 +189,7 @@ public class ExtractTikaContent extends AbstractProcessor {
 				jsonDoc.put(name, vals[0]);
 			}
 		}
-		try {
-			System.out.println(mapper.writeValueAsString(jsonDoc));
-		} catch (JsonProcessingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+
 		// Write jsonDoc into flowFile destination:
 		try {
 			String destination = context.getProperty(CONTENT_DEST).getValue();
