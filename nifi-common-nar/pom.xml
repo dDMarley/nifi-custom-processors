@@ -35,6 +35,11 @@
 			<artifactId>nifi-tika-extract-processor</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.ddmarley</groupId>
+			<artifactId>nifi-fetch-files-processor</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>
