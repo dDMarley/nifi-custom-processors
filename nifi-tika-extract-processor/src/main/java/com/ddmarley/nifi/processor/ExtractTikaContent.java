@@ -32,6 +32,10 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.langdetect.OptimaizeLangDetector;
+import org.apache.tika.language.detect.LanguageConfidence;
+import org.apache.tika.language.detect.LanguageDetector;
+import org.apache.tika.language.detect.LanguageResult;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
@@ -62,6 +66,7 @@ public class ExtractTikaContent extends AbstractProcessor {
 	static final String FORMAT_UPPER = "uppercase";
 	static final String FORMAT_LOWER = "lowercase";
 	static final String FIELDNAME_CONTENT = "content";
+	static final String FIELDNAME_LANG = "content_language";
 
 	static final Relationship REL_ORIGINAL = new Relationship.Builder().name("original").description("").build();
 	static final Relationship REL_SUCCESS = new Relationship.Builder().name("success").description("").build();
@@ -71,6 +76,11 @@ public class ExtractTikaContent extends AbstractProcessor {
 			.name("Extract strategy").description("Weather to extract content only, metadata only or even both.")
 			.required(true).allowableValues(STRATEGY_CONTENT, STRATEGY_META, STRATEGY_ALL)
 			.defaultValue(STRATEGY_CONTENT).build();
+	
+	static final PropertyDescriptor EXTRACT_LANG = new PropertyDescriptor.Builder()
+			.name("Language detection").description("Weather to detect the language of the document. If detected it will be placed into '" + FIELDNAME_LANG + "'")
+			.required(true).allowableValues("true","false")
+			.defaultValue("false").build();
 
 	static final PropertyDescriptor CONTENT_LOCATION = new PropertyDescriptor.Builder().name("Content location")
 			.description("Where the binary content is located. This could be the content of the incoming FlowFile, "
@@ -104,6 +114,7 @@ public class ExtractTikaContent extends AbstractProcessor {
 		properties.add(CONTENT_LOCATION);
 		properties.add(ATTRIBUTE_NAME);
 		properties.add(EXTRACT_STRATEGY);
+		properties.add(EXTRACT_LANG);
 		properties.add(CONTENT_DEST);
 		properties.add(FIELDNAME_FORMAT);
 		properties.add(CONTENT_FIELDNAME);
@@ -128,6 +139,7 @@ public class ExtractTikaContent extends AbstractProcessor {
 		}
 
 		final String extractStrategy = context.getProperty(EXTRACT_STRATEGY).getValue();
+		final boolean extractLang = context.getProperty(EXTRACT_LANG).asBoolean();
 		final String contentLocation = context.getProperty(CONTENT_LOCATION).getValue();
 
 		final AtomicReference<TikaResults> results = new AtomicReference<TikaResults>(null);
@@ -139,7 +151,7 @@ public class ExtractTikaContent extends AbstractProcessor {
 						getLogger().warn("Could not get binary content from flowFile content. Routing to " + REL_ORIGINAL);
 						error.set("rel_original");
 					} else {
-						results.set(this.ExtractWithTika(new BufferedInputStream(in), extractStrategy));
+						results.set(this.ExtractWithTika(new BufferedInputStream(in), extractStrategy, extractLang));
 					}
 				} catch (TikaException e) {
 					getLogger().error("Tika extraction failed for content binary: " + e.getMessage());
@@ -162,7 +174,7 @@ public class ExtractTikaContent extends AbstractProcessor {
 			}
 			try {
 				results.set(this.ExtractWithTika(new ByteArrayInputStream(Base64.decodeBase64(attContent)),
-						extractStrategy));
+						extractStrategy, extractLang));
 			} catch (TikaException | IOException e) {
 				getLogger().error("Tika extraction failed for attribute binary: " + e.getMessage());
 				session.transfer(flowFile, REL_FAILURE);
@@ -177,6 +189,9 @@ public class ExtractTikaContent extends AbstractProcessor {
 		// Put possible content into jsonDoc:
 		if(StringUtils.isNotBlank(res.getContent())) {
 			jsonDoc.put(this.toValidFieldName(context.getProperty(CONTENT_FIELDNAME).getValue(), context), res.getContent());
+		}
+		if(extractLang) {
+			jsonDoc.put(FIELDNAME_LANG, res.getLanguage());
 		}
 		// Put possible metadata into jsonDoc:
 		for (String name : res.getMetadata().names()) {
@@ -215,7 +230,7 @@ public class ExtractTikaContent extends AbstractProcessor {
 	 * @param extractStrategy The extractStrategy based on {@code EXTRACT_STRATEGY}
 	 * @return The extract results (content and metadata) wrapped in a {@code TikaResults} object
 	 */
-	protected TikaResults ExtractWithTika(InputStream content, String extractStrategy) throws TikaException, IOException {
+	protected TikaResults ExtractWithTika(InputStream content, String extractStrategy, boolean langDetect) throws TikaException, IOException {
 
 		Tika tika = new Tika();
 		Metadata metadata = new Metadata();
@@ -226,7 +241,9 @@ public class ExtractTikaContent extends AbstractProcessor {
 			// all --> '-1'!
 			writeLimit = -1;
 		}
+		// Handler for content
 		WriteOutContentHandler handler = new WriteOutContentHandler(writeLimit);
+		LanguageResult langResult = new LanguageResult("other", LanguageConfidence.NONE, 0);
 
 		Parser parser = new AutoDetectParser();
 		ParseContext context = new ParseContext();
@@ -236,6 +253,11 @@ public class ExtractTikaContent extends AbstractProcessor {
 		metadata.set(Metadata.CONTENT_TYPE, mimeType);
 		try {
 			parser.parse(content, new BodyContentHandler(handler), metadata, context);
+			// Do language detection based on config
+			if(langDetect && StringUtils.isNotBlank(handler.toString())) {
+				LanguageDetector detector = new OptimaizeLangDetector().loadModels();
+				langResult = detector.detect(handler.toString());
+			}
 		} catch (SAXException e) {
 			if (!handler.isWriteLimitReached(e)) {
 				// This should never happen with BodyContentHandler...
@@ -245,9 +267,9 @@ public class ExtractTikaContent extends AbstractProcessor {
 			content.close();
 		}
 		if(extractStrategy.equals(STRATEGY_CONTENT)) {
-			return new TikaResults(handler.toString(), new Metadata());
+			return new TikaResults(handler.toString(), langResult.getLanguage(), new Metadata());
 		} else {
-			return new TikaResults(handler.toString(), metadata);
+			return new TikaResults(handler.toString(), langResult.getLanguage(), metadata);
 		}
 	}
 
@@ -280,15 +302,21 @@ public class ExtractTikaContent extends AbstractProcessor {
 	 */
 	public class TikaResults {
 		private String content;
+		private String language;
 		private Metadata metadata;
 
-		public TikaResults(String content, Metadata metadata) {
+		public TikaResults(String content, String language, Metadata metadata) {
 			this.content = content;
+			this.language = language;
 			this.metadata = metadata;
 		}
 
 		public String getContent() {
 			return content;
+		}
+		
+		public String getLanguage() {
+			return language;
 		}
 
 		public Metadata getMetadata() {

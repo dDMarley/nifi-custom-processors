@@ -175,6 +175,48 @@ public class ExtractTikaContentTest {
 				"tika_json",
 				"{\"woop_woop\":\"\\nTest document… \\n\\n\\n\",\"date\":\"2018-09-06T13:51:27Z\",\"pdf_pdfversion\":\"1.5\",\"xmp_creatortool\":\"Microsoft® Word 2013\",\"access_permission_modify_annotations\":\"true\",\"access_permission_can_print_degraded\":\"true\",\"dc_creator\":\"Johannes Brucher\",\"dcterms_created\":\"2018-09-06T13:51:27Z\",\"last_modified\":\"2018-09-06T13:51:27Z\",\"dcterms_modified\":\"2018-09-06T13:51:27Z\",\"dc_format\":\"application/pdf; version=1.5\",\"last_save_date\":\"2018-09-06T13:51:27Z\",\"pdf_docinfo_creator_tool\":\"Microsoft® Word 2013\",\"access_permission_fill_in_form\":\"true\",\"pdf_docinfo_modified\":\"2018-09-06T13:51:27Z\",\"meta_save_date\":\"2018-09-06T13:51:27Z\",\"pdf_encrypted\":\"false\",\"modified\":\"2018-09-06T13:51:27Z\",\"content_type\":\"application/pdf\",\"pdf_docinfo_creator\":\"Johannes Brucher\",\"x_parsed_by\":[\"org.apache.tika.parser.DefaultParser\",\"org.apache.tika.parser.pdf.PDFParser\"],\"creator\":\"Johannes Brucher\",\"meta_author\":\"Johannes Brucher\",\"meta_creation_date\":\"2018-09-06T13:51:27Z\",\"created\":\"Thu Sep 06 15:51:27 CEST 2018\",\"access_permission_extract_for_accessibility\":\"true\",\"access_permission_assemble_document\":\"true\",\"xmptpg_npages\":\"1\",\"creation_date\":\"2018-09-06T13:51:27Z\",\"access_permission_extract_content\":\"true\",\"access_permission_can_print\":\"true\",\"author\":\"Johannes Brucher\",\"producer\":\"Microsoft® Word 2013\",\"access_permission_can_modify\":\"true\",\"pdf_docinfo_producer\":\"Microsoft® Word 2013\",\"pdf_docinfo_created\":\"2018-09-06T13:51:27Z\"}"));
 	}
+	
+	@Test
+	public void testNormalContentWithLanDetect() throws IOException {
+		
+		this.runner.setProperty(ExtractTikaContent.EXTRACT_STRATEGY, ExtractTikaContent.STRATEGY_ALL);
+		this.runner.setProperty(ExtractTikaContent.EXTRACT_LANG, "true");
+		this.runner.setProperty(ExtractTikaContent.CONTENT_LOCATION, ExtractTikaContent.FLOW_FILE_CONTENT);
+		this.runner.setProperty(ExtractTikaContent.FIELDNAME_FORMAT, ExtractTikaContent.FORMAT_LOWER);
+		this.runner.setProperty(ExtractTikaContent.CONTENT_FIELDNAME, "woop:woop");
+
+		this.runner.enqueue(this.getClass().getResourceAsStream("/test_document_en.pdf"));
+		this.runner.run();
+		
+		this.runner.assertQueueEmpty();
+		this.runner.assertTransferCount(ExtractTikaContent.REL_SUCCESS, 1);
+
+		assertTrue(this.runner.getFlowFilesForRelationship(ExtractTikaContent.REL_SUCCESS).get(0).isContentEqual(
+			"{\"woop_woop\":\"\\nBut I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was \\n\\nborn and I will give you a complete account of the system, and expound the actual teachings of the \\n\\ngreat explorer of the truth, the master-builder of human happiness. No one rejects, dislikes, or \\n\\navoids pleasure itself, because it is pleasure, but because those who do not know how to pursue \\n\\npleasure rationally encounter consequences that are extremely painful. Nor again is there anyone \\n\\nwho loves or pursues or desires to obtain pain of itself, because it is pain, but because occasionally \\n\\ncircumstances occur in which toil and pain can procure him some great pleasure. To take a trivial \\n\\nexample, which of us ever undertakes laborious physical exercise, except to obtain some advantage \\n\\nfrom it? \\n\\n\\n\","
+			+ "\"content_language\":\"en\",\"date\":\"2018-11-28T14:14:44Z\",\"pdf_pdfversion\":\"1.5\",\"xmp_creatortool\":\"Microsoft® Word 2013\",\"access_permission_modify_annotations\":\"true\",\"access_permission_can_print_degraded\":\"true\",\"dc_creator\":\"Johannes Brucher\",\"dcterms_created\":\"2018-11-28T14:14:44Z\",\"last_modified\":\"2018-11-28T14:14:44Z\",\"dcterms_modified\":\"2018-11-28T14:14:44Z\",\"dc_format\":\"application/pdf; version=1.5\",\"last_save_date\":\"2018-11-28T14:14:44Z\",\"pdf_docinfo_creator_tool\":\"Microsoft® Word 2013\",\"access_permission_fill_in_form\":\"true\",\"pdf_docinfo_modified\":\"2018-11-28T14:14:44Z\",\"meta_save_date\":\"2018-11-28T14:14:44Z\",\"pdf_encrypted\":\"false\",\"modified\":\"2018-11-28T14:14:44Z\",\"content_type\":\"application/pdf\",\"pdf_docinfo_creator\":\"Johannes Brucher\",\"x_parsed_by\":[\"org.apache.tika.parser.DefaultParser\",\"org.apache.tika.parser.pdf.PDFParser\"],\"creator\":\"Johannes Brucher\",\"meta_author\":\"Johannes Brucher\",\"meta_creation_date\":\"2018-11-28T14:14:44Z\",\"created\":\"Wed Nov 28 15:14:44 CET 2018\",\"access_permission_extract_for_accessibility\":\"true\",\"access_permission_assemble_document\":\"true\",\"xmptpg_npages\":\"1\",\"creation_date\":\"2018-11-28T14:14:44Z\",\"access_permission_extract_content\":\"true\",\"access_permission_can_print\":\"true\",\"author\":\"Johannes Brucher\",\"producer\":\"Microsoft® Word 2013\",\"access_permission_can_modify\":\"true\",\"pdf_docinfo_producer\":\"Microsoft® Word 2013\",\"pdf_docinfo_created\":\"2018-11-28T14:14:44Z\"}"));
+	}
+	
+	@Test
+	public void testNormalContentWithLanDetect_DE() throws IOException {
+		
+		this.runner.setProperty(ExtractTikaContent.EXTRACT_STRATEGY, ExtractTikaContent.STRATEGY_ALL);
+		this.runner.setProperty(ExtractTikaContent.EXTRACT_LANG, "true");
+		this.runner.setProperty(ExtractTikaContent.CONTENT_LOCATION, ExtractTikaContent.FLOW_FILE_CONTENT);
+		this.runner.setProperty(ExtractTikaContent.FIELDNAME_FORMAT, ExtractTikaContent.FORMAT_LOWER);
+		this.runner.setProperty(ExtractTikaContent.CONTENT_FIELDNAME, "woop:woop");
+
+		this.runner.enqueue(this.getClass().getResourceAsStream("/test_document_de.pdf"));
+		this.runner.run();
+		
+		this.runner.assertQueueEmpty();
+		this.runner.assertTransferCount(ExtractTikaContent.REL_SUCCESS, 1);
+
+		assertTrue(this.runner.getFlowFilesForRelationship(ExtractTikaContent.REL_SUCCESS).get(0).isContentEqual(
+			"{\"woop_woop\":\"\\nAuch gibt es niemanden, der den Schmerz an sich liebt, sucht oder wünscht, nur, weil er Schmerz ist, \\n\\nes sei denn, es kommt zu zufälligen Umständen, in denen Mühen und Schmerz ihm große Freude \\n\\nbereiten können. Um ein triviales Beispiel zu nehmen, wer von uns unterzieht sich je anstrengender \\n\\nkörperlicher Betätigung, außer um Vorteile daraus zu ziehen? Aber wer hat irgend ein Recht, einen \\n\\nMenschen zu tadeln, der die Entscheidung trifft, eine Freude zu genießen, die keine unangenehmen \\n\\nFolgen hat, oder einen, der Schmerz vermeidet, welcher keine daraus resultierende Freude nach sich \\n\\nzieht? Auch gibt es niemanden, der den Schmerz an sich liebt, sucht oder wünscht, nur, weil er \\n\\nSchmerz ist, es sei denn, es kommt zu zufälligen Umständen, in denen Mühen und Schmerz ihm \\n\\ngroße Freude bereiten können. Um ein triviales Beispiel zu nehmen, wer von uns unterzieht sich je \\n\\nanstrengender körperlicher Betätigung, außer um Vorteile daraus zu ziehen? \\n\\n\\n\","
+			+ "\"content_language\":\"de\",\"date\":\"2018-11-28T14:13:51Z\",\"pdf_pdfversion\":\"1.5\",\"xmp_creatortool\":\"Microsoft® Word 2013\",\"access_permission_modify_annotations\":\"true\",\"access_permission_can_print_degraded\":\"true\",\"dc_creator\":\"Johannes Brucher\",\"dcterms_created\":\"2018-11-28T14:13:51Z\",\"last_modified\":\"2018-11-28T14:13:51Z\",\"dcterms_modified\":\"2018-11-28T14:13:51Z\",\"dc_format\":\"application/pdf; version=1.5\",\"last_save_date\":\"2018-11-28T14:13:51Z\",\"pdf_docinfo_creator_tool\":\"Microsoft® Word 2013\",\"access_permission_fill_in_form\":\"true\",\"pdf_docinfo_modified\":\"2018-11-28T14:13:51Z\",\"meta_save_date\":\"2018-11-28T14:13:51Z\",\"pdf_encrypted\":\"false\",\"modified\":\"2018-11-28T14:13:51Z\",\"content_type\":\"application/pdf\",\"pdf_docinfo_creator\":\"Johannes Brucher\",\"x_parsed_by\":[\"org.apache.tika.parser.DefaultParser\",\"org.apache.tika.parser.pdf.PDFParser\"],\"creator\":\"Johannes Brucher\",\"meta_author\":\"Johannes Brucher\",\"meta_creation_date\":\"2018-11-28T14:13:51Z\",\"created\":\"Wed Nov 28 15:13:51 CET 2018\",\"access_permission_extract_for_accessibility\":\"true\",\"access_permission_assemble_document\":\"true\",\"xmptpg_npages\":\"1\",\"creation_date\":\"2018-11-28T14:13:51Z\",\"access_permission_extract_content\":\"true\",\"access_permission_can_print\":\"true\",\"author\":\"Johannes Brucher\",\"producer\":\"Microsoft® Word 2013\",\"access_permission_can_modify\":\"true\",\"pdf_docinfo_producer\":\"Microsoft® Word 2013\",\"pdf_docinfo_created\":\"2018-11-28T14:13:51Z\"}"));
+	}
+	
+	
 
 	@Test
 	public void testEmptyProperties() {
