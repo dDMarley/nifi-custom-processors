@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
 import org.apache.nifi.annotation.behavior.ReadsAttribute;
@@ -207,6 +207,7 @@ public class ExtractTikaContent extends AbstractProcessor {
 
 		// Write jsonDoc into flowFile destination:
 		try {
+			System.out.println(mapper.writeValueAsString(jsonDoc));
 			String destination = context.getProperty(CONTENT_DEST).getValue();
 			if (destination.equals(FLOW_FILE_CONTENT)) {
 				flowFile = session.write(flowFile, out -> {

@@ -17,7 +17,7 @@
 	<parent>
 		<groupId>com.ddmarley</groupId>
 		<artifactId>nifi-custom-processors</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.0.0</version>
 	</parent>
 
 	<artifactId>ddmarley-nifi-common-nar</artifactId>
@@ -33,12 +33,12 @@
 		<dependency>
 			<groupId>com.ddmarley</groupId>
 			<artifactId>nifi-tika-extract-processor</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ddmarley</groupId>
 			<artifactId>nifi-fetch-files-processor</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 <!-- 		<dependency> -->
 <!-- 			<groupId>com.ddmarley</groupId> -->

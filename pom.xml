@@ -16,7 +16,7 @@
 
 	<groupId>com.ddmarley</groupId>
 	<artifactId>nifi-custom-processors</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>pom</packaging>
 
 	<properties>
@@ -29,5 +29,14 @@
 		<module>nifi-fetch-files-processor</module>
 		<module>nifi-generate-tablefetch-processor</module>
 	</modules>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 </project>
